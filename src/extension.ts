@@ -16,17 +16,46 @@ export async function activate(context: vscode.ExtensionContext) {
 	// The commandId parameter must match the command field in package.json
 	const disposable = vscode.commands.registerCommand('protea.protea-search', async () => {
 		
-	
+		
+		const panel = vscode.window.createWebviewPanel (
+			'protea',
+			'protea: Search Models',
+			vscode.ViewColumn.One,
+			{ enableScripts: true }
+
+		);
+
+		panel.webview.html = getWebviewcontent()
+
+		function getWebviewcontent(): string {
+			return /*html*/ `
+			<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<meta http-equiv="X-UA-Compatible" content="ie=edge">
+				<title>HTML 5 Boilerplate</title>
+				<link rel="stylesheet" href="style.css">
+			</head>
+			<body>
+				<h1>Hello</h1>
+			</body>
+			</html>
+
+			`;
+
+		}
+
 		const models = fetch("https://ollama-models.zwz.workers.dev/");
 		
 		const json = (await models).json();
 	
-		// vscode.window.showInformationMessage(json);
 		console.log(await json);
 
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from protea!');
+		// vscode.window.showInformationMessage('Hello World from protea!');
 	});
 
 	context.subscriptions.push(disposable);
