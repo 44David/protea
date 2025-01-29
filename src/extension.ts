@@ -55,13 +55,13 @@ export async function activate(context: vscode.ExtensionContext) {
 	const chatCommand = vscode.commands.registerCommand('protea.protea-chat', async () => {
 
 		// Fetch local models from Ollama
-		let modelNames: string[] = [];
+		let localModelNames: string[] = [];
 		try {
 			const response = await ollama.list();
-			modelNames = response.models.map((model: any) => model.name); // Extract model names
+			localModelNames = response.models.map((model: any) => model.name); // Extract model names
 		} catch (error) {
 			console.error("Failed to fetch local Ollama models:", error);
-			modelNames = ["No local models found"];
+			localModelNames = ["No local models found"];
 		}
 
 		const panel = vscode.window.createWebviewPanel (
@@ -72,7 +72,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		);
 
-		panel.webview.html = chatPage(["test-text"]);
+		panel.webview.html = chatPage(localModelNames);
 
 		function chatPage(localModelNames: string[]): string {
 			return /*html*/ `

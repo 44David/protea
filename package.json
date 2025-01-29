@@ -17,6 +17,10 @@
         "command": "protea.protea-search",
         "title": "protea: Search Models"
       }
+      {
+        "command": "protea.protea-chat",
+        "title": "protea: Chat With Protea"
+      }
     ]
   },
   "scripts": {
