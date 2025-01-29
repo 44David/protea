@@ -106,8 +106,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 
 	});
-	
 	context.subscriptions.push(searchCommand);
+
 
 	const chatCommand = vscode.commands.registerCommand('protea.protea-chat', async () => {
 
@@ -129,8 +129,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		);
 
-		panel.webview.html = chatPage(localModelNames);
-
 		function chatPage(localModelNames: string[]): string {
 			return /*html*/ `
 			<!DOCTYPE html>
@@ -147,12 +145,32 @@ export async function activate(context: vscode.ExtensionContext) {
 
 				<div class='chat-containers'>
 					<div class='chat-box' id="chatBox"></div>
-					<textarea id='message-input' rows=3 style="width: 100%;" placeholder="Type a message..."></textarea>
+					<textarea id='messageInput' rows=3 style="width: 100%;" placeholder="Type a message..."></textarea>
 				</div>
 				<label for="modelSelect">Choose a model: </label>
 				<select id="modelSelect">
 					${localModelNames.map((model: string) => `<option value="${model}">${model}</option>`).join('')}
 				</select>
+				<br/>
+				<button id="sendMessage">Send</button>
+				<div id="reponseText"></div>
+				<script>
+					const vscode = acquireVsCodeApi();
+
+					document.getElementById('sendMessage').addEventListener('click', () => {
+						const text = document.getElementById("messageInput").value;
+						vscode.postMessage({ command: 'message', text });
+					})
+
+					window.addEventListener('message', event => {
+						const (command, text) = event.data;
+						if (command === "chatResponse") {
+							document.getElementById('reponseText').innerText = text;
+						}
+					});
+
+				</script>
+
 			</body>
 			</html>
 
@@ -160,8 +178,38 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		};
 
+<<<<<<< HEAD
+		panel.webview.html = chatPage(localModelNames);
+
+		panel.webview.onDidReceiveMessage(async (message: any) => {
+			if (message.command === 'message') {
+				const userPrompt = message.text;
+				let responseText = ''; 
+
+				try {
+					const streamResponse = await ollama.chat({
+						model: 'deepseek-r1:1.5b',
+						messages: [{ role: 'user', content: userPrompt}],
+						stream: true,
+					})
+					
+					for await (const part of streamResponse) {
+						responseText += part.message.content;
+						panel.webview.postMessage({ command: 'chatResponse', text: responseText });
+					}
+				} catch (err) {	
+					panel.webview.postMessage({ command: 'chatResponse', text: `Error: ${String(err)}` });
+				}
+			}
+		});
+
+	});
+	context.subscriptions.push(chatCommand);
+
+=======
 		
 	});
 	
 	context.subscriptions.push(chatCommand);
+>>>>>>> 7390c2283147a66971bebc1531dc3f2caf61a4c2
 }
