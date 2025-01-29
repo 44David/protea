@@ -17,6 +17,11 @@ export async function activate(context: vscode.ExtensionContext) {
 	// The commandId parameter must match the command field in package.json
 	const searchCommand = vscode.commands.registerCommand('protea.protea-search', async () => {
 		
+		const response = await fetch("https://ollama-models.zwz.workers.dev/");
+
+		const data = await response.json();
+
+		const json = data;
 		
 		const panel = vscode.window.createWebviewPanel (
 			'protea',
@@ -25,6 +30,8 @@ export async function activate(context: vscode.ExtensionContext) {
 			{ enableScripts: true }
 
 		);
+
+
 
 		panel.webview.html = searchPage();
 
@@ -40,7 +47,18 @@ export async function activate(context: vscode.ExtensionContext) {
 				<link rel="stylesheet" href="style.css">
 			</head>
 			<body>
-				<h1>Hello</h1>
+			<div>
+
+			
+			${
+				//@ts-ignore
+				json.map((model) => `<p>${model.name}</p>`)
+			
+			}
+
+				
+			</div>
+
 			</body>
 			</html>
 
@@ -121,6 +139,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		};
 
+<<<<<<< HEAD
 		panel.webview.html = chatPage(localModelNames);
 
 		panel.webview.onDidReceiveMessage(async (message: any) => {
@@ -148,4 +167,10 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(chatCommand);
 
+=======
+		
+	});
+	
+	context.subscriptions.push(chatCommand);
+>>>>>>> 7390c2283147a66971bebc1531dc3f2caf61a4c2
 }
