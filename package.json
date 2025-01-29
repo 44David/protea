@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "protea.helloWorld",
-        "title": "Hello World"
+        "command": "protea.protea-search",
+        "title": "protea: Search Models"
       }
     ]
   },
