@@ -15,7 +15,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('protea.protea-search', async () => {
+	const searchCommand = vscode.commands.registerCommand('protea.protea-search', async () => {
 		
 		
 		const panel = vscode.window.createWebviewPanel (
@@ -26,7 +26,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		);
 
-		panel.webview.html = searchPage()
+		panel.webview.html = searchPage();
 
 		function searchPage(): string {
 			return /*html*/ `
@@ -48,44 +48,51 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		}
 
-
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		// vscode.window.showInformationMessage('Hello World from protea!');
+		context.subscriptions.push(searchCommand);
 	});
 
-	context.subscriptions.push(disposable);
 
+	const chatCommand = vscode.commands.registerCommand('protea.protea-search', async () => {
 
-	function getWebviewcontent(localModelNames: string[]): string {
-		return /*html*/ `
-		<!DOCTYPE html>
-		<html lang="en">
-		<head>
-			<meta charset="UTF-8">
-			<meta name="viewport" content="width=device-width, initial-scale=1.0">
-			<meta http-equiv="X-UA-Compatible" content="ie=edge">
-			<title>Protea Chat</title>
-			<link rel="stylesheet" href="style.css">
-		</head>
-		<body>
-			<h2>Chat with Protea</h2>
+		const panel = vscode.window.createWebviewPanel (
+			'protea',
+			'protea: Search Models',
+			vscode.ViewColumn.One,
+			{ enableScripts: true }
 
-			<div class='chat-containers'>
-				<div class='chat-box' id="chatBox"></div>
-				<textarea id='message-input' rows=3 style="width: 100%;" placeholder="Type a message..."></textarea>
-			</div>
-			<label for="modelSelect">Choose a model: </label>
-			<select id="modelSelect">
-				${localModelNames.map((model: string) => `<option value="${model}">${model}</option>`).join('')}
-			</select>
-		</body>
-		</html>
+		);
 
-		`;
+		panel.webview.html = chatPage(["test-text"]);
 
+		function chatPage(localModelNames: string[]): string {
+			return /*html*/ `
+			<!DOCTYPE html>
+			<html lang="en">
+			<head>
+				<meta charset="UTF-8">
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+				<meta http-equiv="X-UA-Compatible" content="ie=edge">
+				<title>Protea Chat</title>
+				<link rel="stylesheet" href="style.css">
+			</head>
+			<body>
+				<h2>Chat with Protea</h2>
+
+				<div class='chat-containers'>
+					<div class='chat-box' id="chatBox"></div>
+					<textarea id='message-input' rows=3 style="width: 100%;" placeholder="Type a message..."></textarea>
+				</div>
+				<label for="modelSelect">Choose a model: </label>
+				<select id="modelSelect">
+					${localModelNames.map((model: string) => `<option value="${model}">${model}</option>`).join('')}
+				</select>
+			</body>
+			</html>
+
+			`;
+
+		};
+
+		context.subscriptions.push(chatCommand);
+	});
 }
-
-
-// This method is called when your extension is deactivated
-export function deactivate() {}
