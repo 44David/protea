@@ -2,6 +2,7 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import ollama from 'ollama';
+import * as path from 'path';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -133,58 +134,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		);
 
-		function chatPage(localModelNames: string[]): string {
-			return /*html*/ `
-			<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<meta http-equiv="X-UA-Compatible" content="ie=edge">
-				<title>Protea Chat</title>
-				<link rel="stylesheet" href="style.css">
-			</head>
-			<body>
-				<h2>Chat with Protea</h2>
-
-				<div class='chat-containers'>
-					<div class='chat-box' id="chatBox"></div>
-					<textarea id='messageInput' rows=3 style="width: 100%;" placeholder="Type a message..."></textarea>
-				</div>
-				<label for="modelSelect">Choose a model: </label>
-				<select id="modelSelect">
-					${localModelNames.map((model: string) => `<option value="${model}">${model}</option>`).join('')}
-				</select>
-				<br/>
-				<button id="sendMessage">Send</button>
-				<div id="reponseText"></div>
-				<script>
-					const vscode = acquireVsCodeApi();
-
-					document.getElementById('sendMessage').addEventListener('click', () => {
-						const text = document.getElementById("messageInput").value;
-						vscode.postMessage({ command: 'message', text });
-					})
-
-					window.addEventListener('message', event => {
-						const (command, text) = event.data;
-						if (command === "chatResponse") {
-							document.getElementById('reponseText').innerText = text;
-						}
-					});
-
-				</script>
-
-			</body>
-			</html>
-
-			`;
-
-		};
-
+		console.log("Webview panel created"); // debug
+		
 		panel.webview.html = chatPage(localModelNames);
 
 		panel.webview.onDidReceiveMessage(async (message: any) => {
+			console.log('Message received:', message);  // debug
 			if (message.command === 'message') {
 				const userPrompt = message.text;
 				let responseText = ''; 
@@ -194,13 +149,15 @@ export async function activate(context: vscode.ExtensionContext) {
 						model: 'deepseek-r1:1.5b',
 						messages: [{ role: 'user', content: userPrompt}],
 						stream: true,
-					})
+					});
+					console.log("Ollama response:", streamResponse);
 					
 					for await (const part of streamResponse) {
 						responseText += part.message.content;
 						panel.webview.postMessage({ command: 'chatResponse', text: responseText });
 					}
-				} catch (err) {	
+				} catch (err) {  
+					console.error('Error in chat response:', err);  // Debugging line
 					panel.webview.postMessage({ command: 'chatResponse', text: `Error: ${String(err)}` });
 				}
 			}
@@ -208,6 +165,51 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	});
 
-		
-	context.subscriptions.push(chatCommand);
+}
+
+function chatPage(localModelNames: string[]): string {
+	return /*html*/ `
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		<title>Protea Chat</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+	<body>
+		<h2>Chat with Protea</h2>
+		<div class="chat-containers">
+			<div class="chat-box" id="chatBox"></div>
+			<textarea id="messageInput" rows="3" style="width: 100%;" placeholder="Type a message..."></textarea>
+		</div>
+		<label for="modelSelect">Choose a model: </label>
+		<select id="modelSelect">
+			${localModelNames.map((model: string) => `<option value="${model}">${model}</option>`).join('')}
+		</select>
+		<br />
+		<button id="sendMessage">Send</button>
+		<div id="responseText"></div>
+
+		<script>
+			console.log("chat.js loaded!");
+			const vscode = acquireVsCodeApi();
+
+			document.getElementById('sendMessage').addEventListener('click', () => {
+				const text = document.getElementById("messageInput").value;
+				console.log('Sending message:', text); 
+				vscode.postMessage({ command: 'message', text });
+			});
+
+			window.addEventListener('message', event => {
+				const { command, text } = event.data;
+				if (command === "chatResponse") {
+					document.getElementById('responseText').innerText = text;
+				}
+			});
+		</script>
+	</body>
+	</html>
+	`;
 }
