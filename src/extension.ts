@@ -2,7 +2,6 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import ollama from 'ollama';
-import * as path from 'path';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -138,11 +137,12 @@ export async function activate(context: vscode.ExtensionContext) {
 			console.log('Message received:', message);  // debug
 			if (message.command === 'message') {
 				const userPrompt = message.text;
+				const selectedModel = message.model;
 				let responseText = ''; 
 
 				try {
 					const streamResponse = await ollama.chat({
-						model: 'deepseek-r1:1.5b',
+						model: selectedModel,
 						messages: [{ role: 'user', content: userPrompt}],
 						stream: true,
 					});
@@ -195,8 +195,9 @@ function chatPage(localModelNames: string[]): string {
 
 			document.getElementById('sendMessage').addEventListener('click', () => {
 				const text = document.getElementById("messageInput").value;
-				console.log('Sending message:', text); 
-				vscode.postMessage({ command: 'message', text });
+				const selectedModel = document.getElementById("modelSelect").value;
+				console.log('Sending message:', text); 	
+				vscode.postMessage({ command: 'message', text, model: selectedModel });
 			});
 
 			window.addEventListener('message', event => {
