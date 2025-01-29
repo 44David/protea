@@ -83,19 +83,22 @@ export async function activate(context: vscode.ExtensionContext) {
 
 			${
 
-
 				//@ts-ignore
-				json.map((model) => `<h1>${model.name}</h1><p>${model.description}</p><button class="button-pull" role="button" onclick="pullModel()">Pull</button>`).join('')
+				json.map((model) => `<h1>${model.name}</h1><p>${model.description}</p><button class="button-pull" id="button-pull-id role="button">Pull</button>`).join('')
 				
 			}
 			
-			<script>
-
-				function pullModel() {
-					vscode.window.showInformationMessage("Hello!")
-				}
-			</script>
+			${
 				
+				//@ts-ignore
+				document.getElementById('button-pull-id').addEventListener('click', () => {
+					vscode.window.showInformationMessage("Hello!");
+				})
+
+
+
+			}
+
 			</div>
 
 			</body>
@@ -106,6 +109,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		}
 
 	});
+
 	context.subscriptions.push(searchCommand);
 
 
@@ -160,7 +164,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		});
 
 	});
-	context.subscriptions.push(chatCommand);
 
 }
 
