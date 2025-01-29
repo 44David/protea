@@ -52,11 +52,21 @@ export async function activate(context: vscode.ExtensionContext) {
 	});
 
 
-	const chatCommand = vscode.commands.registerCommand('protea.protea-search', async () => {
+	const chatCommand = vscode.commands.registerCommand('protea.protea-chat', async () => {
+
+		// Fetch local models from Ollama
+		let modelNames: string[] = [];
+		try {
+			const response = await ollama.list();
+			modelNames = response.models.map((model: any) => model.name); // Extract model names
+		} catch (error) {
+			console.error("Failed to fetch local Ollama models:", error);
+			modelNames = ["No local models found"];
+		}
 
 		const panel = vscode.window.createWebviewPanel (
 			'protea',
-			'protea: Search Models',
+			'protea: Chat With Protea',
 			vscode.ViewColumn.One,
 			{ enableScripts: true }
 
