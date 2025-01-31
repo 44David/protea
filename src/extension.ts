@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import ollama from 'ollama';
+import ollama, { Message } from 'ollama';
 import { marked } from 'marked';
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -28,30 +28,37 @@ export async function activate(context: vscode.ExtensionContext) {
 		console.log("Webview panel created"); // debug
 		
 		panel.webview.html = chatPage(localModelNames);
+		let memory: Message[] = [ ];
 
 		panel.webview.onDidReceiveMessage(async (message: any) => {
 			console.log('Message received:', message);  // debug
-
+	
 			if (message.command === 'userMessage') {
 				panel.webview.postMessage({ command: "chatResponse", text: message.text, role: "user" });
 				return;
 			}
-
+			
 			if (message.command === 'message') {
 				const userPrompt = message.text;
 				const selectedModel = message.model;
 				let responseText = ''; 
+				
+				memory.push({role: 'user', content: userPrompt });
+				memory.push({role: 'bot', content: responseText });
 
 				try {
 					const streamResponse = await ollama.chat({
 						model: selectedModel,
-						messages: [{ role: 'user', content: userPrompt}],
+						messages: memory,
 						stream: true,
 					});					
 					for await (const part of streamResponse) {
 						responseText += part.message.content;
 						panel.webview.postMessage({ command: 'chatResponse', text: marked.parse(responseText), role: "bot" });
+						console.log("MESSAGE CONTENT", message.content);
+
 					}
+
 				} catch (err) {  
 					console.error('Error in chat response:', err);  // debug
 					panel.webview.postMessage({ command: 'chatResponse', text: `Error: ${String(err)}` });
@@ -86,6 +93,7 @@ function chatPage(localModelNames: string[]): string {
 				margin-bottom: 10px;
 				display: flex;
 				flex-direction: column;
+				
 			}
 
 			.user-message {
@@ -103,11 +111,17 @@ function chatPage(localModelNames: string[]): string {
 				margin: 5px 0;
 				align-self: flex-start;
 			}
+
+			#messageInput {
+				background-color:rgb(57, 57, 57);
+				border-radius: 10px;
+				padding: 7px;
+				color: white;
+			}
+			
 		</style>
 	</head>
 	<body>
-		<h2>Chat with Protea</h2>
-
 
 		<div class="container">
 
@@ -119,11 +133,9 @@ function chatPage(localModelNames: string[]): string {
 
 			<div class="chat-containers">
 				<div class="chat-box" id="chatBox" role="log"></div>
-				<textarea id="messageInput" rows="3" style="width: 100%;" placeholder="Type a message..."></textarea>
+				<textarea id="messageInput" class="messageInput" rows="3" style="width: 100%;" placeholder="Type a message..."></textarea>
 				<button id="sendMessage">Send</button>
 			</div>
-
-
 		</div>
 
 
