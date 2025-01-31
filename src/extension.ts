@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import ollama from 'ollama';
+import { marked } from 'marked';
 
 export async function activate(context: vscode.ExtensionContext) {
 
@@ -49,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					});					
 					for await (const part of streamResponse) {
 						responseText += part.message.content;
-						panel.webview.postMessage({ command: 'chatResponse', text: responseText, role: "bot" });
+						panel.webview.postMessage({ command: 'chatResponse', text: marked.parse(responseText), role: "bot" });
 					}
 				} catch (err) {  
 					console.error('Error in chat response:', err);  // debug
@@ -148,16 +149,15 @@ function chatPage(localModelNames: string[]): string {
 				if (command === "chatResponse" || command === "userMessage") {
 					const messageDiv = document.createElement('div');
 					messageDiv.classList.add(role === "user" ? "user-message" : "bot-message");
-
 					if (role === "bot") {
 						let lastMessage = chatBox.lastElementChild;
 						if (lastMessage.classList.contains("bot-message")) {
-							lastMessage.textContent = text;
+							lastMessage.innerHTML = text;
 							return;
 						}
 					}
 
-					messageDiv.textContent = text;
+					messageDiv.innerHTML = text;
 					chatBox.appendChild(messageDiv);
 					chatBox.scrollTop = chatBox.scrollHeight;
 				}

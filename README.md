@@ -7,7 +7,7 @@ protea is a vscode extension that allows you to chat with LLM's like llama 3, de
 
 
 ## Known Issues / To do 
-- [ ] - Make LLM output formatted (Render Markdown correctly)
+- [x] - Make LLM output formatted (Render Markdown correctly)
 - [ ] - Add chat memory for models
 - [ ] - Change style of chat page
 
