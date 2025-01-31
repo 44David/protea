@@ -1,20 +1,10 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 import ollama from 'ollama';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "protea" is now active!');
 	
-	
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
 	const searchCommand = vscode.commands.registerCommand('protea.protea-search', async () => {
 		
 		const response = await fetch("https://ollama-models.zwz.workers.dev/");
@@ -30,12 +20,10 @@ export async function activate(context: vscode.ExtensionContext) {
 			{ enableScripts: true }
 
 		);
-
 		
 
 		console.log("your page was created"); // debug
 		const generatedHtml = searchPage(json);
-		console.log("Generated HTML:", generatedHtml);
 		panel.webview.html = generatedHtml;
 		console.log("searchPage HTML set"); // debug
 
@@ -64,9 +52,8 @@ export async function activate(context: vscode.ExtensionContext) {
 		const panel = vscode.window.createWebviewPanel (
 			'protea',
 			'protea: Chat With Protea',
-			vscode.ViewColumn.One,
+			vscode.ViewColumn.Two,
 			{ enableScripts: true }
-
 		);
 
 		console.log("Webview panel created"); // debug
@@ -85,9 +72,7 @@ export async function activate(context: vscode.ExtensionContext) {
 						model: selectedModel,
 						messages: [{ role: 'user', content: userPrompt}],
 						stream: true,
-					});
-					console.log("Ollama response:", streamResponse);
-					
+					});					
 					for await (const part of streamResponse) {
 						responseText += part.message.content;
 						panel.webview.postMessage({ command: 'chatResponse', text: responseText });
@@ -112,8 +97,8 @@ function searchPage(json: JSON): string {
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline' 'self';">
-		<title>Test Webview</title>
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		<title>Protea Search</title>
 		<style>
 			.button-pull {
 				background-image: linear-gradient(92.88deg, #455EB5 9.16%, #5643CC 43.89%, #673FD7 64.72%);
@@ -136,43 +121,43 @@ function searchPage(json: JSON): string {
 				touch-action: manipulation;
 			}
 
-			.button-36:hover {
+			.button-pull:hover {
 				box-shadow: rgba(80, 63, 205, 0.5) 0 1px 30px;
 				transition-duration: .1s;
 			}
 
 			@media (min-width: 768px) {
-				.button-36 {
+				.button-pull {
 					padding: 0 2.6rem;
 				}
 			}
 		</style>
 	</head>
-		<body>
-			<div>
-				${
-					//@ts-ignore
-					json.map((model) => `<h1>${model.name}</h1><p>${model.description}</p><button class="button-pull" class="pullButton" role="button">Pull</button>`).join('')	
-				}
-			</div>
+	<body>
+		<div>
+			${
+				//@ts-ignore
+				json.map((model) => `<h1>${model.name}</h1><p>${model.description}</p><button class="button-pull" id="pullButton-${model.name}" class="pullButton" role="button">Pull</button>`).join('')	
+			}
+		</div>
 
-			<script>
-				try {
-					document.querySelectorAll('.pullButton').forEach(button => {
+		<script>
+			const vscode = acquireVsCodeApi();
+
+			document.addEventListener("DOMContentLoaded", () => {
+				json.forEach(model => {
+					if (button) {
 						button.addEventListener('click', () => {
-							console.log('Button clicked!');
-							vscode.postMessage({ command: 'pullModel' });
+							vscode.postMessage( { command: "pull", model: model.name } );
 						});
-					});
-				} catch (error) {
-					console.error("Error attaching event listeners:", error);
-				}
-			</script>
-		</body>
+					};
+				});
+			});
+
+		</script>
+	</body>
 	</html>
-
 	`;
-
 }
 
 function chatPage(localModelNames: string[]): string {
@@ -188,20 +173,20 @@ function chatPage(localModelNames: string[]): string {
 	</head>
 	<body>
 		<h2>Chat with Protea</h2>
-		<div class="chat-containers">
-			<div class="chat-box" id="chatBox"></div>
-			<textarea id="messageInput" rows="3" style="width: 100%;" placeholder="Type a message..."></textarea>
-		</div>
+		<div id="responseText"></div>
+
 		<label for="modelSelect">Choose a model: </label>
 		<select id="modelSelect">
 			${localModelNames.map((model: string) => `<option value="${model}">${model}</option>`).join('')}
 		</select>
 		<br />
 		<button id="sendMessage">Send</button>
-		<div id="responseText"></div>
+		<div class="chat-containers">
+			<div class="chat-box" id="chatBox"></div>
+			<textarea id="messageInput" rows="3" style="width: 100%;" placeholder="Type a message..."></textarea>
+		</div>
 
 		<script>
-			console.log("chat.js loaded!");
 			const vscode = acquireVsCodeApi();
 
 			document.getElementById('sendMessage').addEventListener('click', () => {
