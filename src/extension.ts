@@ -30,6 +30,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		panel.webview.onDidReceiveMessage(async (message: any) => {
 			console.log('Message received:', message);  // debug
+
+			if (message.command === 'userMessage') {
+				panel.webview.postMessage({ command: "chatResponse", text: message.text, role: "user" })
+				return
+			}
+
 			if (message.command === 'message') {
 				const userPrompt = message.text;
 				const selectedModel = message.model;
@@ -46,12 +52,11 @@ export async function activate(context: vscode.ExtensionContext) {
 						panel.webview.postMessage({ command: 'chatResponse', text: responseText });
 					}
 				} catch (err) {  
-					console.error('Error in chat response:', err);  // Debugging line
+					console.error('Error in chat response:', err);  // debug
 					panel.webview.postMessage({ command: 'chatResponse', text: `Error: ${String(err)}` });
 				}
 			}
 		});
-
 	});
 
 	context.subscriptions.push(chatCommand);
@@ -67,21 +72,55 @@ function chatPage(localModelNames: string[]): string {
 		<meta http-equiv="X-UA-Compatible" content="ie=edge">
 		<title>Protea Chat</title>
 		<link rel="stylesheet" href="style.css">
+		<style>
+			.chat-box {
+				max-height: 300px;
+				overflow-y: auto;
+				border: 1px solid #ccc;
+				padding: 10px;
+				margin-bottom: 10px;
+				display: flex;
+				flex-direction: column;
+			}
+
+			.user-message {
+				background-color:rgb(57, 57, 57);
+				color: white;
+				padding: 8px;
+				border-radius: 5px;
+				margin: 5px 0;
+				align-self: flex-end;
+			}
+
+			.bot-message {
+				padding: 8px;
+				border-radius: 2px;
+				margin: 5px 0;
+				align-self: flex-start;
+			}
+		</style>
 	</head>
 	<body>
 		<h2>Chat with Protea</h2>
-		<div id="responseText"></div>
 
-		<label for="modelSelect">Choose a model: </label>
-		<select id="modelSelect">
-			${localModelNames.map((model: string) => `<option value="${model}">${model}</option>`).join('')}
-		</select>
-		<br />
-		<button id="sendMessage">Send</button>
-		<div class="chat-containers">
-			<div class="chat-box" id="chatBox"></div>
-			<textarea id="messageInput" rows="3" style="width: 100%;" placeholder="Type a message..."></textarea>
+
+		<div class="container">
+
+			<label for="modelSelect">Choose a model: </label>
+			<select id="modelSelect">
+				${localModelNames.map((model: string) => `<option value="${model}">${model}</option>`).join('')}
+			</select>
+			<br />
+
+			<div class="chat-containers">
+				<div class="chat-box" id="chatBox" role="log"></div>
+				<textarea id="messageInput" rows="3" style="width: 100%;" placeholder="Type a message..."></textarea>
+				<button id="sendMessage">Send</button>
+			</div>
+
+
 		</div>
+
 
 		<script>
 			const vscode = acquireVsCodeApi();
@@ -89,14 +128,34 @@ function chatPage(localModelNames: string[]): string {
 			document.getElementById('sendMessage').addEventListener('click', () => {
 				const text = document.getElementById("messageInput").value;
 				const selectedModel = document.getElementById("modelSelect").value;
-				console.log('Sending message:', text); 	
-				vscode.postMessage({ command: 'message', text, model: selectedModel });
+
+				if(!text.trim()) return;
+
+				vscode.postMessage({ command: 'userMessage', text, role: 'user' });
+				vscode.postMessage({ command: 'message', text, model: selectedModel })
+
+				document.getElementById("messageInput").value = ""
 			});
 
 			window.addEventListener('message', event => {
-				const { command, text } = event.data;
-				if (command === "chatResponse") {
-					document.getElementById('responseText').innerText = text;
+				const { command, text, role } = event.data;
+				const chatBox = document.getElementById("chatBox");
+
+				if (command === "chatResponse" || command === "userMessage") {
+					const messageDiv = document.createElement('div');
+					messageDiv.classList.add(role === "user" ? "user-message" : "bot-message");
+
+					if (role === "bot") {
+						let lastMessage = chatBox.lastElementChild;
+						if (lastMessage && lastMessage.classList.contains("bot-message")) {
+							lastMessage.textContent = text;
+							return;
+						}
+					}
+
+					messageDiv.textContent = text;
+					chatBox.appendChild(messageDiv);
+					chatBox.scrollTop = chatBox.scrollHeight;
 				}
 			});
 		</script>
