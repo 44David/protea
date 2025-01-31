@@ -32,8 +32,8 @@ export async function activate(context: vscode.ExtensionContext) {
 			console.log('Message received:', message);  // debug
 
 			if (message.command === 'userMessage') {
-				panel.webview.postMessage({ command: "chatResponse", text: message.text, role: "user" })
-				return
+				panel.webview.postMessage({ command: "chatResponse", text: message.text, role: "user" });
+				return;
 			}
 
 			if (message.command === 'message') {
@@ -73,10 +73,14 @@ function chatPage(localModelNames: string[]): string {
 		<title>Protea Chat</title>
 		<link rel="stylesheet" href="style.css">
 		<style>
+
+			* {
+
+                font-family: Arial, Helvetica, sans-serif;
+			}
 			.chat-box {
 				max-height: 300px;
 				overflow-y: auto;
-				border: 1px solid #ccc;
 				padding: 10px;
 				margin-bottom: 10px;
 				display: flex;
