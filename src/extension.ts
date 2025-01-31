@@ -4,38 +4,6 @@ import ollama from 'ollama';
 export async function activate(context: vscode.ExtensionContext) {
 
 	console.log('Congratulations, your extension "protea" is now active!');
-	
-	const searchCommand = vscode.commands.registerCommand('protea.protea-search', async () => {
-		
-		const response = await fetch("https://ollama-models.zwz.workers.dev/");
-
-		const data = await response.json();
-
-		const json = data;
-		
-		const panel = vscode.window.createWebviewPanel (
-			'protea',
-			'protea: Search Models',
-			vscode.ViewColumn.One,
-			{ enableScripts: true }
-
-		);
-		
-
-		console.log("your page was created"); // debug
-		const generatedHtml = searchPage(json);
-		panel.webview.html = generatedHtml;
-		console.log("searchPage HTML set"); // debug
-
-		panel.webview.onDidReceiveMessage(async (message: any) => {
-			console.log("Message received:", message);
-			if (message.command === 'pullModel') {
-				vscode.window.showInformationMessage("Pull model clicked!");
-			}
-		});
-
-	context.subscriptions.push(searchCommand);
-
 
 	const chatCommand = vscode.commands.registerCommand('protea.protea-chat', async () => {
 
@@ -88,77 +56,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(chatCommand);
 
-});
-
-function searchPage(json: JSON): string {
-	return /*html*/ `
-	<!DOCTYPE html>
-	<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta http-equiv="X-UA-Compatible" content="ie=edge">
-		<title>Protea Search</title>
-		<style>
-			.button-pull {
-				background-image: linear-gradient(92.88deg, #455EB5 9.16%, #5643CC 43.89%, #673FD7 64.72%);
-				border-radius: 8px;
-				border-style: none;
-				box-sizing: border-box;
-				color: #FFFFFF;
-				cursor: pointer;
-				flex-shrink: 0;
-				font-family: "Inter UI","SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif;
-				font-size: 16px;
-				font-weight: 500;
-				height: 1.5rem;
-				padding: 0 1.6rem;
-				text-align: center;
-				text-shadow: rgba(0, 0, 0, 0.25) 0 3px 8px;
-				transition: all .5s;
-				user-select: none;
-				-webkit-user-select: none;
-				touch-action: manipulation;
-			}
-
-			.button-pull:hover {
-				box-shadow: rgba(80, 63, 205, 0.5) 0 1px 30px;
-				transition-duration: .1s;
-			}
-
-			@media (min-width: 768px) {
-				.button-pull {
-					padding: 0 2.6rem;
-				}
-			}
-		</style>
-	</head>
-	<body>
-		<div>
-			${
-				//@ts-ignore
-				json.map((model) => `<h1>${model.name}</h1><p>${model.description}</p><button class="button-pull" id="pullButton-${model.name}" class="pullButton" role="button">Pull</button>`).join('')	
-			}
-		</div>
-
-		<script>
-			const vscode = acquireVsCodeApi();
-
-			document.addEventListener("DOMContentLoaded", () => {
-				json.forEach(model => {
-					if (button) {
-						button.addEventListener('click', () => {
-							vscode.postMessage( { command: "pull", model: model.name } );
-						});
-					};
-				});
-			});
-
-		</script>
-	</body>
-	</html>
-	`;
-}
 
 function chatPage(localModelNames: string[]): string {
 	return /*html*/ `
