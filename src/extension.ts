@@ -49,7 +49,7 @@ export async function activate(context: vscode.ExtensionContext) {
 					});					
 					for await (const part of streamResponse) {
 						responseText += part.message.content;
-						panel.webview.postMessage({ command: 'chatResponse', text: responseText });
+						panel.webview.postMessage({ command: 'chatResponse', text: responseText, role: "bot" });
 					}
 				} catch (err) {  
 					console.error('Error in chat response:', err);  // debug
@@ -147,7 +147,7 @@ function chatPage(localModelNames: string[]): string {
 
 					if (role === "bot") {
 						let lastMessage = chatBox.lastElementChild;
-						if (lastMessage && lastMessage.classList.contains("bot-message")) {
+						if (lastMessage.classList.contains("bot-message")) {
 							lastMessage.textContent = text;
 							return;
 						}
