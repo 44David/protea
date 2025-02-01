@@ -83,17 +83,30 @@ function chatPage(localModelNames: string[]): string {
 		<style>
 
 			* {
-
-                font-family: Arial, Helvetica, sans-serif;
+				font-family: Arial, Helvetica, sans-serif;
 			}
-			.chat-box {
-				max-height: 300px;
+
+			.chat-containers {
+				max-height: 100px;
 				overflow-y: auto;
 				padding: 10px;
 				margin-bottom: 10px;
 				display: flex;
 				flex-direction: column;
-				
+			}
+
+			.text-box {
+				min-height: 20px;
+				max-height: 300px;
+				overflow-y: auto;
+				padding: 13px 14px;
+				resize: none;
+				width: 100%;
+				box-sizing: border-box;
+				background-color:rgb(57, 57, 57);
+				border-radius: 10px;
+				padding: 7px;
+				color: white;
 			}
 
 			.user-message {
@@ -111,13 +124,6 @@ function chatPage(localModelNames: string[]): string {
 				margin: 5px 0;
 				align-self: flex-start;
 			}
-
-			#messageInput {
-				background-color:rgb(57, 57, 57);
-				border-radius: 10px;
-				padding: 7px;
-				color: white;
-			}
 			
 		</style>
 	</head>
@@ -132,14 +138,21 @@ function chatPage(localModelNames: string[]): string {
 			<br />
 
 			<div class="chat-containers">
-				<div class="chat-box" id="chatBox" role="log"></div>
-				<textarea id="messageInput" class="messageInput" rows="3" style="width: 100%;" placeholder="Type a message..."></textarea>
+				<textarea class="text-box" id="messageInput" rows="1" placeholder="Enter a message"></textarea>
 				<button id="sendMessage">Send</button>
 			</div>
 		</div>
 
 
 		<script>
+			const textarea = document.querySelector("#messageInput");
+
+			textarea.addEventListener("input", function () {
+				this.style.height = "auto"; 
+				this.style.height = Math.min(this.scrollHeight, 150) + "px"; 
+			});
+
+
 			const vscode = acquireVsCodeApi();
 
 			document.getElementById('sendMessage').addEventListener('click', () => {
